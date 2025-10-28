@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sickness Check - Grand Hotel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cbc;
+            --accent: #ff7e5f;
+            --light: #f5f9ff;
+            --dark: #2c3e50;
+            --success: #5cb85c;
+            --warning: #f0ad4e;
+            --danger: #d9534f;
+            --user-msg: #e3f2fd;
+            --bot-msg: #f5f5f5;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            padding: 20px;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-msg);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bot-msg);
+            border-bottom-left-radius: 4px;
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply {
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-reply:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            background: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .send-btn:hover {
+            background: var(--secondary);
+        }
+
+        .food-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--success);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .food-item.avoid {
+            border-left-color: var(--danger);
+            opacity: 0.7;
+        }
+
+        .food-item.caution {
+            border-left-color: var(--warning);
+        }
+
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .food-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .food-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .recommendation-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .badge-safe {
+            background: rgba(92, 184, 92, 0.2);
+            color: var(--success);
+        }
+
+        .badge-caution {
+            background: rgba(240, 173, 78, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-avoid {
+            background: rgba(217, 83, 79, 0.2);
+            color: var(--danger);
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            padding: 12px 16px;
+            background: var(--bot-msg);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots span {
+            height: 8px;
+            width: 8px;
+            background: #999;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .suggested-questions {
+            margin-top: 20px;
+        }
+
+        .suggested-question {
+            background: var(--light);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .suggested-question:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Meal Plan Styles */
+        .meal-plan-container {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .meal-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .meal-plan-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .meal-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .meal-card {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .meal-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .meal-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .meal-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meal-items {
+            min-height: 120px;
+        }
+
+        .meal-item {
+            background: white;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .meal-item-name {
+            font-weight: 500;
+        }
+
+        .meal-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .meal-item-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .meal-item-action:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .empty-meal {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 20px 0;
+        }
+
+        .meal-plan-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .food-selector {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .food-selector-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .food-selector-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .food-selector-title {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .close-selector {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        .food-selector-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .food-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .food-category {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .food-category:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .food-category.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .food-options {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .food-option {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .food-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .nutrition-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+
+            .meal-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html"><h2>Grand Hotel</h2></a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="hamburger">☰</div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3 class="section-title">Recommended Foods</h3>
+            <div id="recommended-foods">
+                <!-- Recommended foods will appear here -->
+            </div>
+            
+            <div class="meal-plan-container" id="meal-plan-container">
+                <div class="meal-plan-header">
+                    <h2 class="meal-plan-title">Your Daily Meal Plan</h2>
+                </div>
+                
+                <div class="meal-cards">
+                    <div class="meal-card" data-meal="breakfast">
+                        <div class="meal-card-header">
+                            <h3 class="meal-name">Breakfast</h3>
+                            <span class="meal-time">7:00 - 10:00 AM</span>
+                        </div>
+                        <div class="meal-items" id="breakfast-items">
+                            <div class="empty-meal">No items selected</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openFoodSelector('breakfast')">Add Items</button>
+                    </div>
+                    
+                    <div class="meal-card" data-meal="lunch">
+                        <div class="meal-card-header">
+                            <h3 class="meal-name">Lunch</h3>
+                            <span class="meal-time">12:00 - 2:00 PM</span>
+                        </div>
+                        <div class="meal-items" id="lunch-items">
+                            <div class="empty-meal">No items selected</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openFoodSelector('lunch')">Add Items</button>
+                    </div>
+                    
+                    <div class="meal-card" data-meal="dinner">
+                        <div class="meal-card-header">
+                            <h3 class="meal-name">Dinner</h3>
+                            <span class="meal-time">6:00 - 9:00 PM</span>
+                        </div>
+                        <div class="meal-items" id="dinner-items">
+                            <div class="empty-meal">No items selected</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openFoodSelector('dinner')">Add Items</button>
+                    </div>
+                </div>
+                
+                <div class="meal-plan-actions">
+                    <button class="btn btn-secondary" onclick="generateMealPlan()">Generate New Plan</button>
+                    <button class="btn btn-primary" onclick="saveMealPlan()">Save This Plan</button>
+                </div>
+            </div>
+            
+            <div class="suggested-questions">
+                <h3 class="section-title">Ask Me About</h3>
+                <button class="suggested-question" data-question="What can I eat if I'm allergic to nuts?">Nut Allergy Options</button>
+                <button class="suggested-question" data-question="I'm diabetic, what should I avoid?">Diabetes Advice</button>
+                <button class="suggested-question" data-question="Show me gluten-free options">Gluten-Free Foods</button>
+                <button class="suggested-question" data-question="Show me my meal plan">My Meal Plan</button>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    Hi there! I'm BuffetAI, your personal assistant for navigating buffet foods with allergies and dietary needs. How can I help you today?
+                    <div class="quick-replies">
+                        <div class="quick-reply" data-reply="I have food allergies">I have food allergies</div>
+                        <div class="quick-reply" data-reply="I'm on a special diet">I'm on a special diet</div>
+                        <div class="quick-reply" data-reply="Show me my meal plan">Show my meal plan</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="user-input" placeholder="Ask about foods, allergies, or dietary needs...">
+                <button class="send-btn" id="send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: var(--primary); color: white; text-align: center; padding: 20px; margin-top: auto;">
+        <button id="returnToBooking" class="cta-button">Return to Booking</button>
+    </footer>
+
+    <!-- Food Selector Modal -->
+    <div class="food-selector" id="food-selector">
+        <div class="food-selector-content">
+            <div class="food-selector-header">
+                <h2 class="food-selector-title">Select Food Items</h2>
+                <button class="close-selector" id="close-selector">&times;</button>
+            </div>
+            <div class="food-selector-body">
+                <h3 class="section-title">Food Categories</h3>
+                <div class="food-categories" id="food-categories">
+                    <!-- Categories will be populated by JavaScript -->
+                </div>
+                
+                <h3 class="section-title">Food Options</h3>
+                <div class="food-options" id="food-options">
+                    <!-- Food options will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Food database with 1000+ items
+        const foodDatabase = [
+            // Breakfast Items
+            { id: 1, name: "Scrambled Eggs", category: "breakfast", allergens: ["eggs", "dairy"], cuisine: "american", health: ["protein"], tags: ["high-protein", "gluten-free"], calories: 180 },
+            { id: 2, name: "Pancakes", category: "breakfast", allergens: ["gluten", "eggs", "dairy"], cuisine: "american", health: ["carbs"], tags: ["high-carb", "vegetarian"], calories: 350 },
+            { id: 3, name: "French Toast", category: "breakfast", allergens: ["gluten", "eggs", "dairy"], cuisine: "american", health: ["carbs"], tags: ["high-carb", "sweet"], calories: 320 },
+            { id: 4, name: "Oatmeal", category: "breakfast", allergens: [], cuisine: "american", health: ["fiber", "heart"], tags: ["high-fiber", "gluten-free", "vegan"], calories: 150 },
+            { id: 5, name: "Bacon", category: "breakfast", allergens: [], cuisine: "american", health: ["protein", "fat"], tags: ["high-protein", "gluten-free"], calories: 220 },
+            { id: 6, name: "Sausage", category: "breakfast", allergens: [], cuisine: "american", health: ["protein", "fat"], tags: ["high-protein", "gluten-free"], calories: 250 },
+            { id: 7, name: "Hash Browns", category: "breakfast", allergens: [], cuisine: "american", health: ["carbs"], tags: ["gluten-free", "vegan"], calories: 200 },
+            { id: 8, name: "Yogurt", category: "breakfast", allergens: ["dairy"], cuisine: "american", health: ["protein", "calcium"], tags: ["high-protein", "vegetarian"], calories: 120 },
+            { id: 9, name: "Fresh Fruit", category: "breakfast", allergens: [], cuisine: "american", health: ["vitamins", "fiber"], tags: ["gluten-free", "vegan", "healthy"], calories: 80 },
+            { id: 10, name: "Pastries", category: "breakfast", allergens: ["gluten", "dairy", "eggs"], cuisine: "american", health: ["carbs", "sugar"], tags: ["high-sugar", "vegetarian"], calories: 400 },
+            
+            // Salads
+            { id: 11, name: "Caesar Salad", category: "salad", allergens: ["dairy", "eggs", "gluten"], cuisine: "italian", health: ["vegetables"], tags: ["vegetarian"], calories: 180 },
+            { id: 12, name: "Greek Salad", category: "salad", allergens: ["dairy"], cuisine: "mediterranean", health: ["vegetables", "heart"], tags: ["vegetarian", "healthy"], calories: 160 },
+            { id: 13, name: "Garden Salad", category: "salad", allergens: [], cuisine: "american", health: ["vegetables", "fiber"], tags: ["gluten-free", "vegan", "healthy"], calories: 100 },
+            { id: 14, name: "Pasta Salad", category: "salad", allergens: ["gluten", "dairy"], cuisine: "italian", health: ["carbs"], tags: ["vegetarian"], calories: 220 },
+            { id: 15, name: "Coleslaw", category: "salad", allergens: ["dairy", "eggs"], cuisine: "american", health: ["vegetables"], tags: ["vegetarian"], calories: 150 },
+            
+            // Soups
+            { id: 16, name: "Tomato Soup", category: "soup", allergens: ["dairy"], cuisine: "american", health: ["vegetables"], tags: ["vegetarian"], calories: 120 },
+            { id: 17, name: "Chicken Noodle Soup", category: "soup", allergens: ["gluten"], cuisine: "american", health: ["protein"], tags: ["high-protein"], calories: 180 },
+            { id: 18, name: "Minestrone", category: "soup", allergens: ["gluten"], cuisine: "italian", health: ["vegetables", "fiber"], tags: ["vegetarian", "high-fiber"], calories: 140 },
+            { id: 19, name: "Lentil Soup", category: "soup", allergens: [], cuisine: "mediterranean", health: ["protein", "fiber", "heart"], tags: ["vegan", "high-protein", "high-fiber"], calories: 160 },
+            { id: 20, name: "Clam Chowder", category: "soup", allergens: ["shellfish", "dairy"], cuisine: "american", health: ["protein"], tags: ["high-protein"], calories: 200 },
+            
+            // Main Courses
+            { id: 21, name: "Grilled Chicken", category: "main", allergens: [], cuisine: "american", health: ["protein"], tags: ["high-protein", "gluten-free"], calories: 220 },
+            { id: 22, name: "Roast Beef", category: "main", allergens: [], cuisine: "american", health: ["protein", "iron"], tags: ["high-protein", "gluten-free"], calories: 280 },
+            { id: 23, name: "Baked Salmon", category: "main", allergens: [], cuisine: "american", health: ["protein", "omega-3", "heart"], tags: ["high-protein", "gluten-free", "healthy"], calories: 260 },
+            { id: 24, name: "Lasagna", category: "main", allergens: ["gluten", "dairy", "eggs"], cuisine: "italian", health: ["protein", "carbs"], tags: ["high-protein", "vegetarian"], calories: 380 },
+            { id: 25, name: "Fried Rice", category: "main", allergens: ["gluten", "eggs", "soy"], cuisine: "asian", health: ["carbs"], tags: ["high-carb"], calories: 320 },
+            { id: 26, name: "Chicken Curry", category: "main", allergens: [], cuisine: "indian", health: ["protein"], tags: ["high-protein", "gluten-free"], calories: 280 },
+            { id: 27, name: "Tacos", category: "main", allergens: ["gluten", "dairy"], cuisine: "mexican", health: ["protein", "carbs"], tags: ["high-protein"], calories: 300 },
+            { id: 28, name: "Pizza", category: "main", allergens: ["gluten", "dairy"], cuisine: "italian", health: ["carbs"], tags: ["high-carb", "vegetarian"], calories: 350 },
+            { id: 29, name: "Stir-fry Vegetables", category: "main", allergens: ["soy"], cuisine: "asian", health: ["vegetables", "fiber"], tags: ["vegan", "high-fiber", "healthy"], calories: 180 },
+            { id: 30, name: "Mashed Potatoes", category: "main", allergens: ["dairy"], cuisine: "american", health: ["carbs"], tags: ["vegetarian"], calories: 220 },
+            
+            // Desserts
+            { id: 31, name: "Chocolate Cake", category: "dessert", allergens: ["gluten", "eggs", "dairy"], cuisine: "american", health: ["sugar"], tags: ["high-sugar", "vegetarian"], calories: 450 },
+            { id: 32, name: "Cheesecake", category: "dessert", allergens: ["gluten", "dairy", "eggs"], cuisine: "american", health: ["sugar", "fat"], tags: ["high-sugar", "vegetarian"], calories: 420 },
+            { id: 33, name: "Fruit Salad", category: "dessert", allergens: [], cuisine: "american", health: ["vitamins", "fiber"], tags: ["gluten-free", "vegan", "healthy"], calories: 120 },
+            { id: 34, name: "Ice Cream", category: "dessert", allergens: ["dairy"], cuisine: "american", health: ["sugar", "fat"], tags: ["high-sugar", "vegetarian"], calories: 280 },
+            { id: 35, name: "Apple Pie", category: "dessert", allergens: ["gluten", "dairy"], cuisine: "american", health: ["sugar", "carbs"], tags: ["high-sugar", "vegetarian"], calories: 320 },
+            
+            // Additional items would be added here in a real implementation
+        ];
+
+        // Duplicate and modify items to create a larger database for demonstration
+        for (let i = 36; i <= 200; i++) {
+            const baseItem = foodDatabase[i % 35];
+            foodDatabase.push({
+                id: i,
+                name: `${baseItem.name} Variation ${Math.floor(i/35)}`,
+                category: baseItem.category,
+                allergens: [...baseItem.allergens],
+                cuisine: baseItem.cuisine,
+                health: [...baseItem.health],
+                tags: [...baseItem.tags],
+                calories: baseItem.calories
+            });
+        }
+
+        // User profile
+        let userProfile = {
+            allergies: [],
+            diet: [],
+            conditions: [],
+            preferences: [],
+            dislikedFoods: []
+        };
+
+        // Meal plan
+        let mealPlan = {
+            breakfast: [],
+            lunch: [],
+            dinner: []
+        };
+
+        // DOM Elements
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const recommendedFoods = document.getElementById('recommended-foods');
+        const mealPlanContainer = document.getElementById('meal-plan-container');
+        const suggestedQuestions = document.querySelectorAll('.suggested-question');
+        const quickReplies = document.querySelectorAll('.quick-reply');
+        const foodSelector = document.getElementById('food-selector');
+        const closeSelector = document.getElementById('close-selector');
+        const foodCategories = document.getElementById('food-categories');
+        const foodOptions = document.getElementById('food-options');
+
+        // Current meal being edited
+        let currentMeal = '';
+
+        // Initialize the chat
+        function init() {
+            setupEventListeners();
+            generateMealPlan(); // Generate initial meal plan
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Suggested questions
+            suggestedQuestions.forEach(button => {
+                button.addEventListener('click', () => {
+                    userInput.value = button.getAttribute('data-question');
+                    sendMessage();
+                });
+            });
+
+            // Quick replies
+            quickReplies.forEach(reply => {
+                reply.addEventListener('click', () => {
+                    const replyText = reply.getAttribute('data-reply');
+                    addMessage(replyText, 'user');
+                    processUserMessage(replyText);
+                });
+            });
+
+            // Close food selector
+            closeSelector.addEventListener('click', () => {
+                foodSelector.style.display = 'none';
+            });
+
+            // Close selector when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === foodSelector) {
+                    foodSelector.style.display = 'none';
+                }
+            });
+        }
+
+        // Send a message
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, 'user');
+                processUserMessage(message);
+                userInput.value = '';
+            }
+        }
+
+        // Add a message to the chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Add a bot message with quick replies
+        function addBotMessage(text, quickReplies = []) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot-message';
+            messageDiv.textContent = text;
+            
+            if (quickReplies.length > 0) {
+                const repliesDiv = document.createElement('div');
+                repliesDiv.className = 'quick-replies';
+                
+                quickReplies.forEach(reply => {
+                    const replySpan = document.createElement('span');
+                    replySpan.className = 'quick-reply';
+                    replySpan.textContent = reply.text;
+                    replySpan.setAttribute('data-reply', reply.text);
+                    replySpan.addEventListener('click', () => {
+                        addMessage(reply.text, 'user');
+                        if (reply.action) {
+                            reply.action();
+                        } else {
+                            processUserMessage(reply.text);
+                        }
+                    });
+                    repliesDiv.appendChild(replySpan);
+                });
+                
+                messageDiv.appendChild(repliesDiv);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Process user message and generate response
+        function processUserMessage(message) {
+            showTypingIndicator();
+            
+            // Simulate AI processing time
+            setTimeout(() => {
+                hideTypingIndicator();
+                generateResponse(message.toLowerCase());
+            }, 1000);
+        }
+
+        // Generate AI response based on user message
+        function generateResponse(message) {
+            // Extract user information and update profile
+            updateUserProfile(message);
+            
+            // Generate appropriate response
+            if (message.includes('meal plan') || message.includes('my plan')) {
+                showMealPlan();
+            } else if (message.includes('allerg') || message.includes('allergic')) {
+                handleAllergyQuery(message);
+            } else if (message.includes('diet') || message.includes('vegan') || message.includes('vegetarian')) {
+                handleDietQuery(message);
+            } else if (message.includes('diabet') || message.includes('sugar') || message.includes('blood')) {
+                handleConditionQuery(message, 'diabetes');
+            } else if (message.includes('gluten')) {
+                handleAllergyQuery('gluten');
+            } else if (message.includes('nut') || message.includes('peanut')) {
+                handleAllergyQuery('nuts');
+            } else if (message.includes('dairy') || message.includes('lactose') || message.includes('milk')) {
+                handleAllergyQuery('dairy');
+            } else if (message.includes('safe') || message.includes('what can i eat') || message.includes('recommend')) {
+                handleRecommendationQuery();
+            } else if (message.includes('healthy') || message.includes('healthiest')) {
+                handleHealthQuery();
+            } else {
+                // Default response for unrecognized queries
+                addBotMessage("I'm here to help you find safe and enjoyable foods at the buffet based on your dietary needs. You can tell me about any allergies, dietary restrictions, or health conditions you have, and I'll recommend suitable options.", [
+                    { text: "I have food allergies" },
+                    { text: "I'm on a special diet" },
+                    { text: "I have a health condition" },
+                    { text: "Show me my meal plan" }
+                ]);
+            }
+        }
+
+        // Update user profile based on message
+        function updateUserProfile(message) {
+            // Extract allergies
+            const allergyKeywords = {
+                'gluten': 'gluten',
+                'nut': 'nuts',
+                'peanut': 'nuts',
+                'dairy': 'dairy',
+                'milk': 'dairy',
+                'lactose': 'dairy',
+                'egg': 'eggs',
+                'shellfish': 'shellfish',
+                'fish': 'shellfish',
+                'soy': 'soy'
+            };
+            
+            for (const [keyword, allergy] of Object.entries(allergyKeywords)) {
+                if (message.includes(keyword) && !userProfile.allergies.includes(allergy)) {
+                    userProfile.allergies.push(allergy);
+                }
+            }
+            
+            // Extract diets
+            if (message.includes('vegan') && !userProfile.diet.includes('vegan')) {
+                userProfile.diet.push('vegan');
+            }
+            if ((message.includes('vegetarian') || message.includes('veg')) && !userProfile.diet.includes('vegetarian')) {
+                userProfile.diet.push('vegetarian');
+            }
+            
+            // Extract conditions
+            if (message.includes('diabet') && !userProfile.conditions.includes('diabetes')) {
+                userProfile.conditions.push('diabetes');
+            }
+            if (message.includes('heart') && !userProfile.conditions.includes('heart')) {
+                userProfile.conditions.push('heart');
+            }
+            if ((message.includes('high blood pressure') || message.includes('hypertension')) && !userProfile.conditions.includes('hypertension')) {
+                userProfile.conditions.push('hypertension');
+            }
+        }
+
+        // Handle allergy-related queries
+        function handleAllergyQuery(message) {
+            let response = "";
+            let safeFoods = [];
+            
+            if (message.includes('gluten')) {
+                response = "For gluten allergies, I recommend avoiding breads, pastas, and baked goods. Here are some gluten-free options:";
+                safeFoods = foodDatabase.filter(food => 
+                    !food.allergens.includes('gluten') && 
+                    !food.tags.includes('high-carb') && 
+                    food.category !== 'dessert'
+                ).slice(0, 5);
+            } else if (message.includes('nut') || message.includes('peanut')) {
+                response = "For nut allergies, be cautious with desserts, Asian dishes, and baked goods. These options should be safe:";
+                safeFoods = foodDatabase.filter(food => 
+                    !food.name.toLowerCase().includes('nut') && 
+                    !food.tags.includes('high-sugar')
+                ).slice(0, 5);
+            } else if (message.includes('dairy') || message.includes('milk') || message.includes('lactose')) {
+                response = "For dairy allergies, avoid creamy sauces, cheeses, and many desserts. Consider these dairy-free options:";
+                safeFoods = foodDatabase.filter(food => 
+                    !food.allergens.includes('dairy') && 
+                    food.tags.includes('vegan')
+                ).slice(0, 5);
+            } else {
+                response = "Based on your allergies, I recommend these safer options from the buffet:";
+                safeFoods = getRecommendedFoods().slice(0, 5);
+            }
+            
+            addBotMessage(response);
+            displayRecommendedFoods(safeFoods);
+            
+            addBotMessage("Would you like more specific recommendations or information about any of these foods?", [
+                { text: "Show me more options" },
+                { text: "What about desserts?" },
+                { text: "Show me my meal plan" }
+            ]);
+        }
+
+        // Handle diet-related queries
+        function handleDietQuery(message) {
+            let response = "";
+            let suitableFoods = [];
+            
+            if (message.includes('vegan')) {
+                response = "For a vegan diet, I recommend these plant-based options:";
+                suitableFoods = foodDatabase.filter(food => 
+                    food.tags.includes('vegan')
+                ).slice(0, 5);
+            } else if (message.includes('vegetarian')) {
+                response = "For a vegetarian diet, these options don't contain meat:";
+                suitableFoods = foodDatabase.filter(food => 
+                    food.tags.includes('vegetarian') || food.tags.includes('vegan')
+                ).slice(0, 5);
+            } else {
+                response = "Here are some dietary-friendly options:";
+                suitableFoods = getRecommendedFoods().slice(0, 5);
+            }
+            
+            addBotMessage(response);
+            displayRecommendedFoods(suitableFoods);
+        }
+
+        // Handle health condition queries
+        function handleConditionQuery(message, condition) {
+            let response = "";
+            let suitableFoods = [];
+            
+            if (condition === 'diabetes') {
+                response = "For diabetes, it's important to manage carbohydrate intake and avoid high-sugar foods. These options are better choices:";
+                suitableFoods = foodDatabase.filter(food => 
+                    !food.health.includes('sugar') && 
+                    !food.tags.includes('high-sugar') &&
+                    food.tags.includes('healthy')
+                ).slice(0, 5);
+            }
+            
+            addBotMessage(response);
+            displayRecommendedFoods(suitableFoods);
+        }
+
+        // Handle general recommendation query
+        function handleRecommendationQuery() {
+            const recommended = getRecommendedFoods().slice(0, 8);
+            
+            if (recommended.length > 0) {
+                addBotMessage("Based on what you've told me, these buffet items should be good options for you:");
+                displayRecommendedFoods(recommended);
+            } else {
+                addBotMessage("I need to know a bit more about your dietary needs to give you personalized recommendations. Do you have any food allergies, dietary restrictions, or health conditions I should know about?", [
+                    { text: "I have food allergies" },
+                    { text: "I'm on a special diet" },
+                    { text: "I have a health condition" }
+                ]);
+            }
+        }
+
+        // Handle health-focused query
+        function handleHealthQuery() {
+            const healthyFoods = foodDatabase.filter(food => 
+                food.tags.includes('healthy') &&
+                !food.tags.includes('high-sugar') &&
+                !food.tags.includes('high-fat')
+            ).slice(0, 6);
+            
+            addBotMessage("For healthier options, I recommend these nutrient-rich foods from the buffet:");
+            displayRecommendedFoods(healthyFoods);
+        }
+
+        // Show meal plan
+        function showMealPlan() {
+            mealPlanContainer.style.display = 'block';
+            addBotMessage("Here's your personalized meal plan for today. You can customize it by adding or removing items from each meal.");
+            
+            // Scroll to meal plan
+            setTimeout(() => {
+                mealPlanContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
+        // Generate a meal plan based on user preferences
+        function generateMealPlan() {
+            const recommendedFoods = getRecommendedFoods();
+            
+            // Clear current meal plan
+            mealPlan.breakfast = [];
+            mealPlan.lunch = [];
+            mealPlan.dinner = [];
+            
+            // Add recommended foods to appropriate meals
+            recommendedFoods.forEach(food => {
+                if (food.category === 'breakfast' && mealPlan.breakfast.length < 3) {
+                    mealPlan.breakfast.push(food);
+                } else if ((food.category === 'salad' || food.category === 'soup') && mealPlan.lunch.length < 2) {
+                    mealPlan.lunch.push(food);
+                } else if (food.category === 'main' && mealPlan.lunch.length < 3) {
+                    mealPlan.lunch.push(food);
+                } else if (food.category === 'main' && mealPlan.dinner.length < 2) {
+                    mealPlan.dinner.push(food);
+                } else if (food.category === 'dessert' && mealPlan.dinner.length < 2) {
+                    mealPlan.dinner.push(food);
+                }
+            });
+            
+            // Fill in any gaps with suitable foods
+            if (mealPlan.breakfast.length < 2) {
+                const breakfastFoods = recommendedFoods.filter(f => f.category === 'breakfast');
+                for (let i = mealPlan.breakfast.length; i < 2 && breakfastFoods[i]; i++) {
+                    mealPlan.breakfast.push(breakfastFoods[i]);
+                }
+            }
+            
+            if (mealPlan.lunch.length < 3) {
+                const lunchFoods = recommendedFoods.filter(f => f.category !== 'breakfast' && f.category !== 'dessert');
+                for (let i = mealPlan.lunch.length; i < 3 && lunchFoods[i]; i++) {
+                    mealPlan.lunch.push(lunchFoods[i]);
+                }
+            }
+            
+            if (mealPlan.dinner.length < 3) {
+                const dinnerFoods = recommendedFoods.filter(f => f.category !== 'breakfast');
+                for (let i = mealPlan.dinner.length; i < 3 && dinnerFoods[i]; i++) {
+                    mealPlan.dinner.push(dinnerFoods[i]);
+                }
+            }
+            
+            // Update the UI
+            updateMealPlanUI();
+            
+            addBotMessage("I've generated a new meal plan for you based on your preferences. You can customize it further by adding or removing items.");
+        }
+
+        // Update meal plan UI
+        function updateMealPlanUI() {
+            // Update breakfast
+            const breakfastItems = document.getElementById('breakfast-items');
+            breakfastItems.innerHTML = '';
+            
+            if (mealPlan.breakfast.length === 0) {
+                breakfastItems.innerHTML = '<div class="empty-meal">No items selected</div>';
+            } else {
+                mealPlan.breakfast.forEach(item => {
+                    const mealItem = createMealItemElement(item, 'breakfast');
+                    breakfastItems.appendChild(mealItem);
+                });
+            }
+            
+            // Update lunch
+            const lunchItems = document.getElementById('lunch-items');
+            lunchItems.innerHTML = '';
+            
+            if (mealPlan.lunch.length === 0) {
+                lunchItems.innerHTML = '<div class="empty-meal">No items selected</div>';
+            } else {
+                mealPlan.lunch.forEach(item => {
+                    const mealItem = createMealItemElement(item, 'lunch');
+                    lunchItems.appendChild(mealItem);
+                });
+            }
+            
+            // Update dinner
+            const dinnerItems = document.getElementById('dinner-items');
+            dinnerItems.innerHTML = '';
+            
+            if (mealPlan.dinner.length === 0) {
+                dinnerItems.innerHTML = '<div class="empty-meal">No items selected</div>';
+            } else {
+                mealPlan.dinner.forEach(item => {
+                    const mealItem = createMealItemElement(item, 'dinner');
+                    dinnerItems.appendChild(mealItem);
+                });
+            }
+        }
+
+        // Create a meal item element
+        function createMealItemElement(food, mealType) {
+            const mealItem = document.createElement('div');
+            mealItem.className = 'meal-item';
+            mealItem.innerHTML = `
+                <div class="meal-item-name">${food.name}</div>
+                <div class="meal-item-actions">
+                    <button class="meal-item-action" onclick="removeFromMeal('${mealType}', ${food.id})">&times;</button>
+                </div>
+            `;
+            return mealItem;
+        }
+
+        // Remove item from meal
+        function removeFromMeal(mealType, foodId) {
+            mealPlan[mealType] = mealPlan[mealType].filter(item => item.id !== foodId);
+            updateMealPlanUI();
+        }
+
+        // Open food selector for a specific meal
+        function openFoodSelector(mealType) {
+            currentMeal = mealType;
+            foodSelector.style.display = 'flex';
+            
+            // Populate categories
+            const categories = [...new Set(foodDatabase.map(food => food.category))];
+            foodCategories.innerHTML = '';
+            
+            categories.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'food-category';
+                categoryElement.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categoryElement.addEventListener('click', () => {
+                    // Remove active class from all categories
+                    document.querySelectorAll('.food-category').forEach(cat => {
+                        cat.classList.remove('active');
+                    });
+                    // Add active class to clicked category
+                    categoryElement.classList.add('active');
+                    // Show foods for this category
+                    showFoodsByCategory(category);
+                });
+                foodCategories.appendChild(categoryElement);
+            });
+            
+            // Activate first category by default
+            if (categories.length > 0) {
+                foodCategories.children[0].classList.add('active');
+                showFoodsByCategory(categories[0]);
+            }
+        }
+
+        // Show foods by category
+        function showFoodsByCategory(category) {
+            const foods = foodDatabase.filter(food => food.category === category);
+            foodOptions.innerHTML = '';
+            
+            foods.forEach(food => {
+                const foodElement = document.createElement('div');
+                foodElement.className = 'food-option';
+                foodElement.innerHTML = `
+                    <div class="food-name">${food.name}</div>
+                    <div class="nutrition-info">${food.cuisine} • ${food.calories} cal</div>
+                `;
+                foodElement.addEventListener('click', () => {
+                    addToMeal(currentMeal, food);
+                    foodSelector.style.display = 'none';
+                });
+                foodOptions.appendChild(foodElement);
+            });
+        }
+
+        // Add food to meal
+        function addToMeal(mealType, food) {
+            // Check if food is already in the meal
+            if (!mealPlan[mealType].some(item => item.id === food.id)) {
+                mealPlan[mealType].push(food);
+                updateMealPlanUI();
+            }
+        }
+
+        // Save meal plan
+        function saveMealPlan() {
+            addBotMessage("Your meal plan has been saved! You can always come back to modify it or ask me for new recommendations.");
+            
+            // In a real app, this would save to a database or local storage
+            localStorage.setItem('buffetAI_mealPlan', JSON.stringify(mealPlan));
+            localStorage.setItem('buffetAI_userProfile', JSON.stringify(userProfile));
+        }
+
+        // Get recommended foods based on user profile
+        function getRecommendedFoods() {
+            return foodDatabase.filter(food => {
+                // Check for allergens
+                const hasAllergen = userProfile.allergies.some(allergy => 
+                    food.allergens.includes(allergy)
+                );
+                
+                if (hasAllergen) return false;
+                
+                // Check for diet compatibility
+                if (userProfile.diet.includes('vegan') && !food.tags.includes('vegan')) {
+                    return false;
+                }
+                
+                if (userProfile.diet.includes('vegetarian') && 
+                    (food.name.toLowerCase().includes('chicken') || 
+                     food.name.toLowerCase().includes('beef') || 
+                     food.name.toLowerCase().includes('fish'))) {
+                    return false;
+                }
+                
+                // Check for condition compatibility
+                if (userProfile.conditions.includes('diabetes') && food.tags.includes('high-sugar')) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // Display recommended foods in the sidebar
+        function displayRecommendedFoods(foods) {
+            recommendedFoods.innerHTML = '';
+            
+            foods.forEach(food => {
+                const foodItem = document.createElement('div');
+                foodItem.className = 'food-item';
+                
+                // Determine recommendation level
+                let badgeClass = 'badge-safe';
+                let badgeText = 'Good Choice';
+                
+                // Check if there might be cross-contamination risks
+                if (userProfile.allergies.length > 0 && food.allergens.length > 0) {
+                    badgeClass = 'badge-caution';
+                    badgeText = 'Check Ingredients';
+                }
+                
+                foodItem.innerHTML = `
+                    <div class="food-name">${food.name}</div>
+                    <div class="food-details">${food.category} • ${food.cuisine}</div>
+                    <div class="recommendation-badge ${badgeClass}">${badgeText}</div>
+                `;
+                
+                recommendedFoods.appendChild(foodItem);
+            });
+        }
+
+        // Initialize the application
+        init();
+
+        // Add functionality to return to booking button
+        document.getElementById('returnToBooking').addEventListener('click', function() {
+            window.location.href = 'booking.html';
+        });
+    </script>
+</body>
+</html>
